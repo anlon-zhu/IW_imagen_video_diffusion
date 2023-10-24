@@ -1,3 +1,5 @@
+from PIL import Image, ImageSequence
+import numpy as np
 from pathlib import Path
 from functools import partial
 
@@ -19,13 +21,16 @@ USER_AGENT = get_datasets_user_agent()
 
 # helpers functions
 
+
 def exists(val):
     return val is not None
+
 
 def cycle(dl):
     while True:
         for data in dl:
             yield data
+
 
 def convert_image_to(img_type, image):
     if image.mode != img_type:
@@ -34,8 +39,11 @@ def convert_image_to(img_type, image):
 
 # dataset, dataloader, collator
 
+
 class Collator:
-    def __init__(self, image_size, url_label, text_label, image_label, name, channels):
+    def __init__(
+            self, image_size, url_label, text_label, image_label, name,
+            channels):
         self.url_label = url_label
         self.text_label = text_label
         self.image_label = image_label
@@ -47,6 +55,7 @@ class Collator:
             T.CenterCrop(image_size),
             T.ToTensor(),
         ])
+
     def __call__(self, batch):
 
         texts = []
@@ -54,20 +63,23 @@ class Collator:
         for item in batch:
             try:
                 if self.download:
-                    image = self.fetch_single_image(item[self.url_label])
+                    image = self.fetch_single_image(
+                        item[self.url_label])
                 else:
                     image = item[self.image_label]
                 image = self.transform(image.convert(self.channels))
             except:
                 continue
 
-            text = t5.t5_encode_text([item[self.text_label]], name=self.name)
+            text = t5.t5_encode_text(
+                [item[self.text_label]],
+                name=self.name)
             texts.append(torch.squeeze(text))
             images.append(image)
 
         if len(texts) == 0:
             return None
-        
+
         texts = pad_sequence(texts, True)
 
         newbatch = []
@@ -84,25 +96,31 @@ class Collator:
                 headers={"user-agent": USER_AGENT},
             )
             with urllib.request.urlopen(request, timeout=timeout) as req:
-                image = Image.open(io.BytesIO(req.read())).convert('RGB')
+                image = Image.open(io.BytesIO(
+                    req.read())).convert('RGB')
         except Exception:
             image = None
         return image
+
 
 class Dataset(Dataset):
     def __init__(
         self,
         folder,
         image_size,
-        exts = ['jpg', 'jpeg', 'png', 'tiff'],
-        convert_image_to_type = None
+        exts=['jpg', 'jpeg', 'png', 'tiff'],
+        convert_image_to_type=None
     ):
         super().__init__()
         self.folder = folder
         self.image_size = image_size
-        self.paths = [p for ext in exts for p in Path(f'{folder}').glob(f'**/*.{ext}')]
+        self.paths = [
+            p for ext in exts
+            for p in Path(f'{folder}').glob(f'**/*.{ext}')]
 
-        convert_fn = partial(convert_image_to, convert_image_to_type) if exists(convert_image_to_type) else nn.Identity()
+        convert_fn = partial(
+            convert_image_to, convert_image_to_type) if exists(
+            convert_image_to_type) else nn.Identity()
 
         self.transform = T.Compose([
             T.Lambda(convert_fn),
@@ -120,18 +138,68 @@ class Dataset(Dataset):
         img = Image.open(path)
         return self.transform(img)
 
+
 def get_images_dataloader(
     folder,
     *,
     batch_size,
     image_size,
-    shuffle = True,
-    cycle_dl = False,
-    pin_memory = True
+    shuffle=True,
+    cycle_dl=False,
+    pin_memory=True
 ):
     ds = Dataset(folder, image_size)
-    dl = DataLoader(ds, batch_size = batch_size, shuffle = shuffle, pin_memory = pin_memory)
+    dl = DataLoader(
+        ds, batch_size=batch_size, shuffle=shuffle,
+        pin_memory=pin_memory)
 
     if cycle_dl:
         dl = cycle(dl)
     return dl
+
+
+class GifDataset(Dataset):
+    def __init__(
+        self,
+        folder,
+        image_size,
+        exts=['jpg', 'jpeg', 'png', 'tiff', 'gif'],
+        convert_image_to_type=None
+    ):
+        super().__init__()
+        self.folder = folder
+        self.image_size = image_size
+        self.paths = [
+            p for ext in exts
+            for p in Path(f'{folder}').glob(f'**/*.{ext}')]
+
+        convert_fn = partial(
+            convert_image_to, convert_image_to_type) if exists(
+            convert_image_to_type) else nn.Identity()
+
+        self.transform = T.Compose([
+            T.Lambda(convert_fn),
+            T.Resize(image_size),
+            T.RandomHorizontalFlip(),
+            T.CenterCrop(image_size),
+            T.ToTensor()
+        ])
+
+    def __len__(self):
+        # Return the total number of frames across all GIFs
+        return sum(
+            [len(Image.open(path).seek(1)) for path in self.paths])
+
+    def __getitem__(self, index):
+        # Get the GIF file path
+        gif_path = self.paths[index]
+        gif_frames = []
+
+        # Open the GIF and extract frames
+        with Image.open(gif_path) as gif:
+            for frame in ImageSequence.Iterator(gif):
+                img = self.transform(frame)
+                gif_frames.append(img)
+
+        # Return the frames as a list or tensor, depending on your needs
+        return gif_frames

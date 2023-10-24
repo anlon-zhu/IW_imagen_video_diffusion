@@ -1,7 +1,7 @@
 import torch
 import tqdm
 from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
-from imagen_pytorch.data import GifDataset
+from video_data import Dataset, video_tensor_to_gif
 
 unet1 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 unet2 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
@@ -35,8 +35,8 @@ trainer = ImagenTrainer(
 ).cuda()
 
 print('Loading dataset...')
-dataset = GifDataset(folder='./data',
-                     image_size=64, frame=32)
+dataset = Dataset(folder='./data',
+                  image_size=64, frame=32)
 trainer.add_train_dataset(dataset, batch_size=1)
 
 for i in tqdm(range(200000)):
@@ -46,3 +46,12 @@ for i in tqdm(range(200000)):
     if not (i % 500):
         valid_loss = trainer.valid_step(unet_number=1, max_batch_size=4)
         print(f'valid loss: {valid_loss}')
+
+# sample
+# extrapolating to 20 frames from training on 10 frames
+videos = trainer.sample(video_frames=20)
+
+print('Shape of sample:', videos.shape)  # (4, 3, 20, 32, 32)
+
+for i, video in enumerate(videos):
+    video_tensor_to_gif(video, f'sample{i}.gif')

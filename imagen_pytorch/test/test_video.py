@@ -6,6 +6,7 @@ from imagen_pytorch.data import GifDataset
 unet1 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 unet2 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 
+print('Loading imagen...')
 imagen = ElucidatedImagen(
     condition_on_text=False,
     unets=(unet1, unet2),
@@ -26,16 +27,17 @@ imagen = ElucidatedImagen(
     S_noise=1.003,
 ).cuda()
 
+print('Loading trainer...')
 trainer = ImagenTrainer(
     imagen=imagen,
     # whether to split the validation dataset from the training
     split_valid_from_train=True
 ).cuda()
 
+print('Loading dataset...')
 dataset = GifDataset(folder='./data',
                      image_size=64, frame=32)
 trainer.add_train_dataset(dataset, batch_size=1)
-
 
 for i in tqdm(range(200000)):
     loss = trainer.train_step(unet_number=1, max_batch_size=4)

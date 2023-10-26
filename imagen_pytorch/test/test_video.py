@@ -3,8 +3,8 @@ import tqdm
 from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
 from video_data import Dataset, video_tensor_to_gif
 
-unet1 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
-unet2 = Unet3D(dim=32, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
+unet1 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
+unet2 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 
 print('Loading imagen...')
 imagen = ElucidatedImagen(

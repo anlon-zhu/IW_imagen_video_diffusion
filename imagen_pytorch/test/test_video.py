@@ -36,7 +36,7 @@ trainer = ImagenTrainer(
 
 print('Loading dataset...')
 dataset = Dataset(folder='./data',
-                  image_size=64, frame=32)
+                  image_size=64, num_frames=32)
 trainer.add_train_dataset(dataset, batch_size=1)
 
 for i in tqdm(range(200000)):

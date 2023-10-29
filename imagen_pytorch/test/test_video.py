@@ -1,5 +1,5 @@
 import torch
-import tqdm
+from tqdm import tqdm
 from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
 from video_data import Dataset, video_tensor_to_gif
 

@@ -20,6 +20,7 @@ class MnistCond(Dataset):
     def __init__(self) -> None:
         super().__init__()
         self.transform = transforms.Compose([
+            transforms.Grayscale(num_output_channels=1),
             transforms.Resize(64),
         ])
         self.mnist = datasets.moving_mnist.MovingMNIST(
@@ -71,6 +72,7 @@ if __name__ == "__main__":
         condition_on_text=False,
         unets=(unet1),
         image_sizes=(64),
+        channels=1,
     ).cuda()
 
     print('Loading trainer...')

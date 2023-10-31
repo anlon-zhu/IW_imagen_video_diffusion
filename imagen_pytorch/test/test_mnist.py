@@ -23,7 +23,7 @@ class MnistCond(Dataset):
             transforms.ToTensor(),
             transforms.Resize(32),
         ])
-        self.mnist = datasets.MovingMNIST(
+        self.mnist = datasets.moving_mnist(
             root="data", train=train, download=True,
             transform=self.transform)
 

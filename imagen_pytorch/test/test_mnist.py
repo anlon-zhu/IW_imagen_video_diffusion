@@ -20,22 +20,18 @@ class MnistCond(Dataset):
     def __init__(self) -> None:
         super().__init__()
         self.transform = transforms.Compose([
-            transforms.ToTensor(),
             transforms.Resize(64),
         ])
         self.mnist = datasets.moving_mnist.MovingMNIST(
-            root="data/", download=True)
+            root="data/", download=True, transform=self.transform)
 
     def __len__(self):
         return len(self.mnist)
 
     def __getitem__(self, i):
-        return self.mnist.__getitem__(i)
-        # img, label = self.mnist[i]
-        # img = img.repeat(3, 1, 1)
-        # hot_label = torch.zeros(10)
-        # hot_label[label] = 1
-        # return img, hot_label.unsqueeze(0)
+        img = self.mnist.__getitem__(i)
+        img = img.repeat(3, 1, 1)
+        return img
 
 
 def delay2str(t):
@@ -68,14 +64,13 @@ if __name__ == "__main__":
         torch.arange(10)).float()[:, None, :]
 
     # Define model
-    unet1 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
-    unet2 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
+    unet1 = Unet3D(dim=64, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 
     print('Loading imagen...')
     imagen = ElucidatedImagen(
         condition_on_text=False,
-        unets=(unet1, unet2),
-        image_sizes=(64, 128),
+        unets=(unet1),
+        image_sizes=(64),
     ).cuda()
 
     print('Loading trainer...')
@@ -92,7 +87,7 @@ if __name__ == "__main__":
     print('Loading dataset...')
     trainer.add_train_dataset(
         MnistCond(),
-        batch_size=128, num_workers=16)
+        batch_size=64, num_workers=16)
     # trainer.add_valid_dataset(
     #     MnistCond(train=False),
     #     batch_size=128, num_workers=16)

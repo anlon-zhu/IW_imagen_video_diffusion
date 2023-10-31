@@ -75,7 +75,6 @@ if __name__ == "__main__":
     imagen = ElucidatedImagen(
         condition_on_text=False,
         unets=(unet1, unet2),
-        ignore_time=False
     ).cuda()
 
     print('Loading trainer...')

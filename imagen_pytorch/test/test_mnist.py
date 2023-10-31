@@ -24,7 +24,7 @@ class MnistCond(Dataset):
             transforms.Resize(64),
         ])
         self.mnist = datasets.moving_mnist.MovingMNIST(
-            root="data", download=True, transform=self.transform)
+            root="data", download=True)
 
     def __len__(self):
         return len(self.mnist)

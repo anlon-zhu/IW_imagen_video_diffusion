@@ -24,17 +24,18 @@ class MnistCond(Dataset):
             transforms.Resize(64),
         ])
         self.mnist = datasets.moving_mnist.MovingMNIST(
-            root="data", download=True)
+            root="data/", download=True)
 
     def __len__(self):
         return len(self.mnist)
 
     def __getitem__(self, i):
-        img, label = self.mnist[i]
-        img = img.repeat(3, 1, 1)
-        hot_label = torch.zeros(10)
-        hot_label[label] = 1
-        return img, hot_label.unsqueeze(0)
+        return self.mnist.__getitem__(i)
+        # img, label = self.mnist[i]
+        # img = img.repeat(3, 1, 1)
+        # hot_label = torch.zeros(10)
+        # hot_label[label] = 1
+        # return img, hot_label.unsqueeze(0)
 
 
 def delay2str(t):

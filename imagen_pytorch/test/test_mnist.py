@@ -75,6 +75,7 @@ if __name__ == "__main__":
     imagen = ElucidatedImagen(
         condition_on_text=False,
         unets=(unet1, unet2),
+        image_sizes=(32, 64),
     ).cuda()
 
     print('Loading trainer...')
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         cond_scale=3.)  # returns List[Image]
     images = np.concatenate([np.array(img) for img in images], axis=1)
     Image.fromarray(images).save(os.path.join(
-        experiment_path, f"final_sample.png"))  # type: ignore
+        experiment_path, f"final_sample.gif"))  # type: ignore
 
     # Save model
     trainer.save(os.path.join(experiment_path,

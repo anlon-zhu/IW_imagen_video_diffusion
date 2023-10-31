@@ -30,7 +30,7 @@ class MnistCond(Dataset):
 
     def __getitem__(self, i):
         img = self.mnist.__getitem__(i)
-        img = img.repeat(3, 1, 1)
+        # img = img.repeat(3, 1, 1)
         return img
 
 

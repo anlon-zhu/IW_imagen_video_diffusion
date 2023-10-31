@@ -17,14 +17,15 @@ from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
 
 
 class MnistCond(Dataset):
-    def __init__(self, train=True) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(32),
         ])
+        datasets.MNIST
         self.mnist = datasets.moving_mnist.MovingMNIST(
-            root="data", train=train, download=True,
+            root="data", download=True,
             transform=self.transform)
 
     def __len__(self):

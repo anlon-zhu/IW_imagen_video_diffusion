@@ -19,12 +19,12 @@ from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
 class MnistCond(Dataset):
     def __init__(self) -> None:
         super().__init__()
-        # self.transform = transforms.Compose([
-        #     transforms.ToTensor(),
-        #     transforms.Resize(32),
-        # ])
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(64),
+        ])
         self.mnist = datasets.moving_mnist.MovingMNIST(
-            root="data", download=True)
+            root="data", download=True, transform=self.transform)
 
     def __len__(self):
         return len(self.mnist)

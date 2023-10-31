@@ -83,7 +83,7 @@ if __name__ == "__main__":
     trainer = ImagenTrainer(
         imagen=imagen,
         # whether to split the validation dataset from the training
-        split_valid_from_train=True
+        # split_valid_from_train=True
     ).cuda()
 
     # If you want to resume training from a checkpoint
@@ -92,11 +92,11 @@ if __name__ == "__main__":
     # Define dataset
     print('Loading dataset...')
     trainer.add_train_dataset(
-        MnistCond(train=True),
+        MnistCond(),
         batch_size=128, num_workers=16)
-    trainer.add_valid_dataset(
-        MnistCond(train=False),
-        batch_size=128, num_workers=16)
+    # trainer.add_valid_dataset(
+    #     MnistCond(train=False),
+    #     batch_size=128, num_workers=16)
 
     # Training variables
     start_time = time.time()

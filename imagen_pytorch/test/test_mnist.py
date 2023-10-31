@@ -7,14 +7,13 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from torchvision import transforms, datasets
-from imagen_pytorch import Unet, Imagen, ImagenTrainer
+from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer
 
 # Library by @lucidrains https://github.com/lucidrains/imagen-pytorch
 # Verified with version 1.21.4
 
-# Example script to train a conditional diffusion model on MNIST at 32x32 resolution
+# Example script to train a conditional diffusion model on moving MNIST at 32x32 resolution
 # This exact file takes < 17Go of VRAM
-# Training takes ~40 minutes on one A5000
 
 
 class MnistCond(Dataset):
@@ -24,7 +23,7 @@ class MnistCond(Dataset):
             transforms.ToTensor(),
             transforms.Resize(32),
         ])
-        self.mnist = datasets.MNIST(
+        self.mnist = datasets.MovingMNIST(
             root="data", train=train, download=True,
             transform=self.transform)
 
@@ -69,29 +68,28 @@ if __name__ == "__main__":
         torch.arange(10)).float()[:, None, :]
 
     # Define model
-    unet = Unet(
-        dim=128,
-        dim_mults=(1, 2, 4),
-        num_resnet_blocks=3,
-        layer_attns=(False, True, True),  # type: ignore
-        layer_cross_attns=(False, True, True),  # type: ignore
-        max_text_len=1,  # maximum number of embeddings per image
-    )
+    unet1 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
+    unet2 = Unet3D(dim=128, channels=1, dim_mults=(1, 2, 4, 8)).cuda()
 
-    imagen = Imagen(
-        unets=unet,
-        image_sizes=32,
-        text_embed_dim=10,  # dimension of one-hot embeddings
-    )
+    print('Loading imagen...')
+    imagen = ElucidatedImagen(
+        condition_on_text=False,
+        unets=(unet1, unet2),
+        ignore_time=False
+    ).cuda()
 
+    print('Loading trainer...')
     trainer = ImagenTrainer(
         imagen=imagen,
-    ).to(device)
+        # whether to split the validation dataset from the training
+        split_valid_from_train=True
+    ).cuda()
 
     # If you want to resume training from a checkpoint
     # trainer.load(path_to_checkpoint.pt)
 
     # Define dataset
+    print('Loading dataset...')
     trainer.add_train_dataset(
         MnistCond(train=True),
         batch_size=128, num_workers=16)
@@ -99,7 +97,7 @@ if __name__ == "__main__":
         MnistCond(train=False),
         batch_size=128, num_workers=16)
 
-    # Trainning variables
+    # Training variables
     start_time = time.time()
     avg_loss = 1.0
     w_avg = 0.99
